@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoQuant - 数字货币量化交易</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-dark: #0d1117; --bg-card: #161b22; --bg-hover: #21262d; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --green: #3fb950; --green-bg: rgba(63, 185, 80, 0.15); --red: #f85149; --red-bg: rgba(248, 81, 73, 0.15); --blue: #58a6ff; --yellow: #d29922; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-controls { display: flex; gap: 12px; align-items: center; }
+        .btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); cursor: pointer; font-size: 14px; transition: all 0.2s; font-family: inherit; }
+        .btn:hover { background: var(--bg-hover); }
+        .btn-primary { background: var(--green); border-color: var(--green); color: #fff; }
+        .btn-primary:hover { background: #2ea043; }
+        main { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 20px; max-width: 1600px; margin: 0 auto; }
+        @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 16px 20px; }
+        .price-table { width: 100%; border-collapse: collapse; }
+        .price-table th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-weight: 500; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .price-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+        .price-table tr:hover { background: var(--bg-hover); }
+        .coin-info { display: flex; align-items: center; gap: 12px; }
+        .coin-icon { width: 32px; height: 32px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; background: var(--bg-hover); }
+        .coin-name { font-weight: 600; }
+        .coin-symbol { color: var(--text-muted); font-size: 13px; }
+        .price { font-family: 'JetBrains Mono', monospace; font-size: 15px; }
+        .change { font-family: 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+        .change.up { color: var(--green); background: var(--green-bg); }
+        .change.down { color: var(--red); background: var(--red-bg); }
+        .portfolio-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: var(--bg-hover); padding: 16px; border-radius: 10px; text-align: center; }
+        .stat-label { color: var(--text-muted); font-size: 13px; margin-bottom: 4px; }
+        .stat-value { font-size: 24px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .stat-value.green { color: var(--green); }
+        .stat-value.red { color: var(--red); }
+        .holding-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-hover); border-radius: 8px; margin-bottom: 8px; }
+        .holding-info { display: flex; align-items: center; gap: 10px; }
+        .holding-amount { font-family: 'JetBrains Mono', monospace; }
+        .holding-value { color: var(--text-muted); font-size: 13px; }
+        .strategy-form { display: flex; flex-direction: column; gap: 14px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; color: var(--text-muted); }
+        .form-group select, .form-group input { padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit; }
+        .form-group select:focus, .form-group input:focus { outline: none; border-color: var(--blue); }
+        .strategy-preview { background: var(--bg-dark); padding: 14px; border-radius: 8px; font-size: 13px; line-height: 1.6; }
+        .keyword { color: #a371f7; }
+        .condition { color: var(--yellow); }
+        .action { color: var(--green); }
+        .history-list { max-height: 250px; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .history-item.buy { border-left: 3px solid var(--green); }
+        .history-item.sell { border-left: 3px solid var(--red); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 450px; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 18px; }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .api-warning { background: var(--yellow); color: #000; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status-badge.paper { background: var(--blue); color: #fff; }
+        .status-badge.live { background: var(--red); color: #fff; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loading { display: flex; justify-content: center; padding: 40px; color: var(--text-muted); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 2000; animation: slideIn 0.3s ease; }
+        .toast.success { border-color: var(--green); }
+        .toast.error { border-color: var(--red); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">CryptoQuant</div>
+        <div class="header-controls">
+            <span id="mode-badge" class="status-badge paper"><span class="status-dot"></span>模拟交易</span>
+            <button class="btn" onclick="openSettings()">设置</button>
+        </div>
+    </header>
+    <main>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="card">
+                <div class="card-header"><span>实时行情</span><button class="btn" onclick="refreshPrices()">刷新</button></div>
+                <div class="card-body" style="padding:0;">
+                    <table class="price-table"><thead><tr><th>币种</th><th>价格</th><th>24h涨跌</th><th>操作</th></tr></thead><tbody id="price-tbody"><tr><td colspan="4" class="loading">加载中...</td></tr></tbody></table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span>走势图表</span></div>
+                <div class="card-body" style="height:250px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);">图表区域 (Binance K线)</div>
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="card">
+                <div class="card-header"><span>资产</span><span id="total-value" style="font-family:'JetBrains Mono';color:var(--green);">$0</span></div>
+                <div class="card-body">
+                    <div class="portfolio-grid">
+                        <div class="stat-box"><div class="stat-label">可用USDT</div><div class="stat-value" id="usdt-balance">0</div></div>
+                        <div class="stat-box"><div class="stat-label">持仓价值</div><div class="stat-value" id="holdings-value">0</div></div class="stat-box>
+                        <div"><div class="stat-label">总盈亏</div><div class="stat-value green" id="pnl">+0%</div></div>
+                        <div class="stat-box"><div class="stat-label">交易次数</div><div class="stat-value" id="trade-count">0</div></div>
+                    </div>
+                    <div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">持仓</div>
+                    <div id="holdings-list"><div style="text-align:center;color:var(--text-muted);padding:20px;">暂无持仓</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span>交易策略</span><button class="btn btn-primary" onclick="saveStrategy()">保存</button></div>
+                <div class="card-body">
+                    <div class="strategy-form">
+                        <div class="form-group"><label>触发条件</label><select id="condition-coin"><option value="BTCUSDT">BTC 涨幅</option><option value="ETHUSDT">ETH 涨幅</option></select></div>
+                        <div class="form-group"><label>条件</label><select id="condition-type"><option value="rise">涨幅超过</option><option value="fall">跌幅超过</option></select></div>
+                        <div class="form-group"><label>数值 (%)</label><input type="number" id="condition-value" value="2" step="0.5"></div>
+                        <div class="form-group"><label>执行操作</label><select id="action-type"><option value="buy">买入</option><option value="sell">卖出</option></select></div>
+                        <div class="form-group"><label>金额 (USDT)</label><input type="number" id="action-amount" value="100"></div>
+                    </div>
+                    <div class="strategy-preview" style="margin-top:14px;">
+                        <span class="keyword">当</span> <span id="preview-coin">BTC</span> <span class="condition">涨幅超过</span> <span id="preview-value">2</span>% <span class="keyword">时</span><br><span class="action">买入</span> <span id="preview-amount">100</span> USDT
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span>交易记录</span><button class="btn" onclick="clearHistory()">清空</button></div>
+                <div class="card-body"><div class="history-list" id="history-list"><div style="text-align:center;color:var(--text-muted);padding:20px;">暂无记录</div></div></div>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-header"><h2>API设置</h2><button class="modal-close" onclick="closeSettings()">x</button></div>
+            <div class="modal-body">
+                <div class="api-warning">API密钥仅保存在浏览器本地，不上传服务器</div>
+                <div class="form-group"><label>交易模式</label><select id="trade-mode" onchange="toggleMode()"><option value="paper">模拟交易</option><option value="live">实盘交易</option></select></div>
+                <div id="live-settings" style="display:none;">
+                    <div class="form-group"><label>Binance API Key</label><input type="text" id="api-key" placeholder="API Key"></div>
+                    <div class="form-group"><label>Binance Secret</label><input type="password" id="secret-key" placeholder="Secret Key"></div>
+                </div>
+                <div class="form-group"><label>初始资金</label><input type="number" id="initial-capital" value="10000"></div>
+                <div style="display:flex;gap:12px;margin-top:20px;"><button class="btn btn-primary" onclick="applySettings()">应用</button><button class="btn" onclick="closeSettings()">取消</button></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const state = { mode:'paper', apiKey:'', secretKey:'', initialCapital:10000, balance:10000, holdings:{}, history:[], prices:{}, strategy:{coin:'BTCUSDT',condition:'rise',value:2,action:'buy',amount:100} };
+        const COINS = [{symbol:'BTCUSDT',name:'比特币',icon:'B'},{symbol:'ETHUSDT',name:'以太坊',icon:'E'},{symbol:'BNBUSDT',name:'币安币',icon:'N'},{symbol:'SOLUSDT',name:'Solana',icon:'S'},{symbol:'XRPUSDT',name:'瑞波币',icon:'X'},{symbol:'ADAUSDT',name:'艾达币',icon:'A'},{symbol:'DOGEUSDT',name:'狗狗币',icon:'D'},{symbol:'DOTUSDT',name:'波卡',icon:'O'}];
+        async function fetchPrices(){try{const s=COINS.map(c=>`"${c.symbol}"`).join(',');const r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${s}]`);const d=await r.json();if(Array.isArray(d)){d.forEach(i=>{state.prices[i.symbol]={price:parseFloat(i.lastPrice),change:parseFloat(i.priceChangePercent)}});renderPrices()}}catch(e){showToast('获取价格失败','error')}}
+        function renderPrices(){const t=document.getElementById('price-tbody');t.innerHTML=COINS.map(c=>{const p=state.prices[c.symbol];const ps=p?p.price.toLocaleString():'--';const cs=p?((p.change>=0?'+':'')+p.change.toFixed(2)+'%'):'--';const cc=p&&p.change>=0?'up':'down';return`<tr><td><div class="coin-info"><span class="coin-icon">${c.icon}</span><div><div class="coin-name">${c.name}</div><div class="coin-symbol">${c.symbol.replace('USDT','')}</div></div></div></td><td class="price">$${ps}</td><td><span class="change ${cc}">${cs}</span></td><td><button class="btn" onclick="quickTrade('${c.symbol}','buy')">买入</button><button class="btn" onclick="quickTrade('${c.symbol}','sell')">卖出</button></td></tr>`}).join('')}
+        function quickTrade(side){const symbol=prompt('输入交易币种(如BTCUSDT):','BTCUSDT');if(!symbol)return;const amt=prompt('输入USDT金额:','100');if(!amt)return;const amount=parseFloat(amt);if(amount<=0||isNaN(amount))return;if(side==='buy'){if(amount>state.balance){showToast('余额不足','error');return;}const price=state.prices[symbol]?.price||0;const qty=amount/price;state.balance-=amount;state.holdings[symbol]=(state.holdings[symbol]||0)+qty;addHistory('买入',symbol,qty,price);showToast(`买入成功`,'success')}else{const holding=state.holdings[symbol]||0;const price=state.prices[symbol]?.price||0;const qty=holding;if(qty<=0){showToast('持仓不足','error');return;}state.balance+=qty*price;state.holdings[symbol]=0;addHistory('卖出',symbol,qty,price);showToast(`卖出成功`,'success')}}
+        function addHistory(type,symbol,quantity,price){state.history.unshift({type,symbol,quantity,price,time:new Date().toLocaleTimeString()});renderHistory()}
+        function renderHistory(){const l=document.getElementById('history-list');if(state.history.length===0){l.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px;">暂无记录</div>';return;}l.innerHTML=state.history.slice(0,20).map(h=>`<div class="history-item ${h.type==='买入'?'buy':'sell'}"><span>${h.type} ${h.symbol.replace('USDT','')}</span><span style="color:var(--text-muted);">${h.quantity.toFixed(6)} @ $${h.price.toLocaleString()}</span></div>`).join('')}
+        function clearHistory(){state.history=[];renderHistory()}
+        function updatePortfolio(){const usdt=state.balance;let hv=0;Object.entries(state.holdings).forEach(([s,q])=>{hv+=(q||0)*(state.prices[s]?.price||0)});const total=usdt+hv;const pnl=((total-state.initialCapital)/state.initialCapital*100);document.getElementById('usdt-balance').textContent=usdt.toFixed(2);document.getElementById('holdings-value').textContent='$'+hv.toFixed(2);document.getElementById('total-value').textContent='$'+total.toFixed(2);const pe=document.getElementById('pnl');pe.textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+'%';pe.className='stat-value '+(pnl>=0?'green':'red');document.getElementById('trade-count').textContent=state.history.length;renderHoldings()}
+        function renderHoldings(){const l=document.getElementById('holdings-list');const h=Object.entries(state.holdings).filter(([_,q])=>q>0);if(h.length===0){l.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px;">暂无持仓</div>';return;}l.innerHTML=h.map(([s,q])=>{const price=state.prices[s]?.price||0;const v=q*price;const coin=COINS.find(c=>c.symbol===s);return`<div class="holding-item"><div class="holding-info"><span style="font-size:24px;background:var(--bg-hover);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${coin?.icon||'?'}</span><div><div class="holding-amount">${s.replace('USDT','')} ${q.toFixed(4)}</div><div class="holding-value">$${v.toFixed(2)}</div></div></div><button class="btn" onclick="quickTrade('${s}','sell')">卖出</button></div>`}).join('')}
+        function updateStrategyPreview(){state.strategy.coin=document.getElementById('condition-coin').value;state.strategy.condition=document.getElementById('condition-type').value;state.strategy.value=parseFloat(document.getElementById('condition-value').value);state.strategy.action=document.getElementById('action-type').value;state.strategy.amount=parseFloat(document.getElementById('action-amount').value);document.getElementById('preview-coin').textContent=state.strategy.coin.replace('USDT','');document.getElementById('preview-value').textContent=state.strategy.value;document.getElementById('preview-amount').textContent=state.strategy.amount}
+        ['condition-coin','condition-type','condition-value','action-type','action-amount'].forEach(id=>{document.getElementById(id).addEventListener('change',updateStrategyPreview);document.getElementById(id).addEventListener('input',updateStrategyPreview)});
+        function saveStrategy(){localStorage.setItem('crypto-strategy',JSON.stringify(state.strategy));showToast('策略已保存','success')}
+        function loadStrategy(){const s=localStorage.getItem('crypto-strategy');if(s){state.strategy=JSON.parse(s);document.getElementById('condition-coin').value=state.strategy.coin;document.getElementById('condition-type').value=state.strategy.condition;document.getElementById('condition-value').value=state.strategy.value;document.getElementById('action-type').value=state.strategy.action;document.getElementById('action-amount').value=state.strategy.amount;updateStrategyPreview()}}
+        function checkStrategy(){if(state.mode!=='paper')return;const{coin,condition,value,action,amount}=state.strategy;const price=state.prices[coin];if(!price)return;let t=false;switch(condition){case'trise':t=price.change>value;break;case'fall':t=price.change<-value;break;}if(t){quickTrade(coin,action)}}
+        function openSettings(){document.getElementById('settings-modal').classList.add('active');document.getElementById('trade-mode').value=state.mode;document.getElementById('api-key').value=state.apiKey;document.getElementById('secret-key').value=state.secretKey;document.getElementById('initial-capital').value=state.initialCapital;toggleMode()}
+        function closeSettings(){document.getElementById('settings-modal').classList.remove('active')}
+        function toggleMode(){const m=document.getElementById('trade-mode').value;document.getElementById('live-settings').style.display=m==='live'?'block':'none'}
+        function applySettings(){const m=document.getElementById('trade-mode').value;state.mode=m;state.apiKey=document.getElementById('api-key').value;state.secretKey=document.getElementById('secret-key').value;state.initialCapital=parseFloat(document.getElementById('initial-capital').value);if(m==='paper'&&state.history.length===0){state.balance=state.initialCapital}localStorage.setItem('crypto-settings',JSON.stringify({mode:m,apiKey:state.apiKey,secretKey:state.secretKey,initialCapital:state.initialCapital}));const b=document.getElementById('mode-badge');b.className='status-badge '+m;b.innerHTML=m==='live'?'<span class="status-dot"></span>实盘交易':'<span class="status-dot"></span>模拟交易';updatePortfolio();closeSettings();showToast('设置已应用','success')}
+        function loadSettings(){const s=localStorage.getItem('crypto-settings');if(s){const st=JSON.parse(s);state.mode=st.mode||'paper';state.apiKey=st.apiKey||'';state.secretKey=st.secretKey||'';state.initialCapital=st.initialCapital||10000;state.balance=state.initialCapital;const b=document.getElementById('mode-badge');if(state.mode==='live'){b.className='status-badge live';b.innerHTML='<span class="status-dot"></span>实盘交易'}}}
+        function refreshPrices(){fetchPrices();showToast('刷新成功','success')}
+        function showToast(m,t){const toast=document.createElement('div');toast.className=`toast ${t}`;toast.textContent=m;document.body.appendChild(toast);setTimeout(()=>toast.remove(),3000)}
+        function init(){loadSettings();loadStrategy();fetchPrices();updatePortfolio();setInterval(fetchPrices,10000);setInterval(checkStrategy,30000)}
+        init();
+    </script>
+</body>
+</html>
